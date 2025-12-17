@@ -1,26 +1,21 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import basicSsl from '@vitejs/plugin-basic-ssl'
 
 export default defineConfig({
     plugins: [
         react(),
-        basicSsl()  // Auto-generate SSL certificate
     ],
     server: {
         host: true,  // Allow network access
-        port: 5556,  // Frontend port
-        https: true, // Enable HTTPS
+        port: 5173,
         proxy: {
             '/api': {
-                target: 'http://localhost:8888',  // Backend port
+                target: 'http://localhost:8765',
                 changeOrigin: true,
-                secure: false
             },
             '/uploads': {
-                target: 'http://localhost:8888',  // Backend port for images
+                target: 'http://localhost:8765',
                 changeOrigin: true,
-                secure: false
             }
         }
     }
