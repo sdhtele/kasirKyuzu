@@ -416,14 +416,16 @@ sudo chown -R $USER:$USER .
 
 ### 3️⃣ Configure untuk Production
 
-Jika ingin menggunakan domain dan HTTPS, update `docker-compose.yml`:
+Docker sudah dikonfigurasi dengan port yang aman. Jika ingin ubah port, edit `docker-compose.yml`:
 
 ```yaml
 services:
   frontend:
     ports:
-      - "3456:80"  # Atau port pilihan Anda
-      - "443:443"   # Untuk HTTPS
+      - "3456:80"  # Port 3456 untuk akses frontend
+  backend:
+    ports:
+      - "8765:8000"  # Port 8765 untuk backend API
 ```
 
 ### 4️⃣ Deploy dengan Docker
@@ -461,7 +463,7 @@ sudo systemctl enable docker
 # Allow aplikasi ports
 sudo ufw allow 3456/tcp  # Frontend
 sudo ufw allow 8765/tcp  # Backend API
-sudo ufw allow 443/tcp   # HTTPS (jika pakai SSL)
+sudo ufw allow 80/tcp    # Nginx HTTP (optional jika pakai proxy)
 
 # Enable firewall
 sudo ufw enable
@@ -488,29 +490,28 @@ sudo docker system prune -a
 
 ---
 
-## 🌐 Setup Domain & SSL (Optional)
+## 🌐 Setup Nginx Reverse Proxy (HTTP)
 
-Untuk production dengan domain custom dan HTTPS:
+Untuk akses via domain/IP dengan nginx:
 
-### Menggunakan Nginx Reverse Proxy + Certbot
+### 1. Install Nginx
 
 ```bash
-# Install Nginx
 sudo apt install nginx -y
+```
 
-# Install Certbot untuk SSL
-sudo apt install certbot python3-certbot-nginx -y
+### 2. Create Nginx Config
 
-# Create nginx config
+```bash
 sudo nano /etc/nginx/sites-available/kasir
 ```
 
-Paste konfigurasi berikut:
+Paste konfigurasi berikut (ganti `yourdomain.com` dengan domain/IP Anda):
 
 ```nginx
 server {
     listen 80;
-    server_name yourdomain.com www.yourdomain.com;
+    server_name yourdomain.com;  # Ganti dengan domain atau IP VPS Anda
 
     # Frontend (React App)
     location / {
@@ -522,7 +523,6 @@ server {
         proxy_cache_bypass $http_upgrade;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
     }
 
     # Backend API
@@ -532,7 +532,6 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
     }
 
     # Static Files (Product Images) - IMPORTANT!
@@ -552,18 +551,22 @@ server {
 }
 ```
 
+### 3. Enable Config & Reload Nginx
+
 ```bash
 # Enable site
 sudo ln -s /etc/nginx/sites-available/kasir /etc/nginx/sites-enabled/
+
+# Test config
 sudo nginx -t
-sudo systemctl restart nginx
 
-# Get SSL certificate
-sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
-
-# Auto-renewal test
-sudo certbot renew --dry-run
+# Reload nginx
+sudo systemctl reload nginx
 ```
+
+### 4. Access Aplikasi
+
+Buka browser: `http://yourdomain.com` atau `http://your-vps-ip`
 
 ---
 
