@@ -512,7 +512,7 @@ server {
     listen 80;
     server_name yourdomain.com www.yourdomain.com;
 
-    # Frontend
+    # Frontend (React App)
     location / {
         proxy_pass http://localhost:3456;
         proxy_http_version 1.1;
@@ -520,6 +520,9 @@ server {
         proxy_set_header Connection 'upgrade';
         proxy_set_header Host $host;
         proxy_cache_bypass $http_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 
     # Backend API
@@ -528,7 +531,24 @@ server {
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
+
+    # Static Files (Product Images) - IMPORTANT!
+    location /uploads {
+        proxy_pass http://localhost:8765/uploads;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        
+        # Cache static files
+        proxy_cache_valid 200 1d;
+        add_header X-Cache-Status $upstream_cache_status;
+    }
+
+    # Max upload size untuk upload gambar produk
+    client_max_body_size 10M;
 }
 ```
 
