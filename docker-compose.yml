@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: kasir-backend
+    ports:
+      - "8765:8000"
+    volumes:
+      - ./backend/kasir.db:/app/kasir.db
+      - ./backend/uploads:/app/uploads
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    networks:
+      - kasir-network
+
+  frontend:
+    build: ./frontend
+    container_name: kasir-frontend
+    ports:
+      - "3456:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - kasir-network
+
+networks:
+  kasir-network:
+    driver: bridge
+
+volumes:
+  db-data:
+  uploads-data:

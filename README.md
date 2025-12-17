@@ -161,7 +161,7 @@ pip install -r requirements.txt
 python -m uvicorn main:app --reload --port 8000
 ```
 
-Backend akan berjalan di: **http://localhost:8000**
+Backend akan berjalan di: **http://localhost:8765**
 
 ### 3️⃣ Setup Frontend (React + Vite)
 
@@ -178,11 +178,11 @@ npm install
 npm run dev
 ```
 
-Frontend akan berjalan di: **http://localhost:3000**
+Frontend akan berjalan di: **http://localhost:5173**
 
 ### 4️⃣ Buka Aplikasi
 
-Buka browser dan akses: **http://localhost:3000**
+Buka browser dan akses: **http://localhost:5173** (development) atau **http://localhost:3456** (Docker)
 
 ---
 
@@ -328,7 +328,226 @@ GET /api/reports/summary     - Dashboard summary
 
 ---
 
-## 🛠️ Development
+## � Docker Deployment (Recommended untuk Production)
+
+Deploy aplikasi dengan Docker untuk kemudahan dan konsistensi. Cocok untuk VPS/Cloud hosting 24/7.
+
+### Prerequisites
+- Docker & Docker Compose installed
+- Ubuntu 20.04+ / Linux VPS (atau Windows/Mac untuk development)
+
+### Quick Start dengan Docker
+
+```bash
+# Clone repository
+git clone https://github.com/sdhtele/kasirKyuzu.git
+cd kasirKyuzu
+
+# Build dan jalankan dengan docker-compose
+docker-compose up -d
+
+# Check status
+docker-compose ps
+
+# View logs
+docker-compose logs -f
+```
+
+Aplikasi akan berjalan di:
+- **Frontend:** http://localhost:3456
+- **Backend API:** http://localhost:8765
+
+### Docker Commands
+
+```bash
+# Stop containers
+docker-compose down
+
+# Rebuild setelah update code
+docker-compose up -d --build
+
+# Restart services
+docker-compose restart
+
+# View logs untuk specific service
+docker-compose logs -f backend
+docker-compose logs -f frontend
+```
+
+---
+
+## 🚀 Deploy ke VPS/Ubuntu (24/7 Hosting)
+
+Tutorial lengkap deploy ke VPS untuk running 24 jam non-stop.
+
+### 1️⃣ Persiapan VPS
+
+```bash
+# Update system
+sudo apt update && sudo apt upgrade -y
+
+# Install Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+
+# Install Docker Compose
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+
+# Verify installation
+docker --version
+docker-compose --version
+```
+
+### 2️⃣ Clone dan Setup Project
+
+```bash
+# Install git (jika belum ada)
+sudo apt install git -y
+
+# Clone repository
+cd /opt
+sudo git clone https://github.com/sdhtele/kasirKyuzu.git
+cd kasirKyuzu
+
+# Set permissions
+sudo chown -R $USER:$USER .
+```
+
+### 3️⃣ Configure untuk Production
+
+Jika ingin menggunakan domain dan HTTPS, update `docker-compose.yml`:
+
+```yaml
+services:
+  frontend:
+    ports:
+      - "3456:80"  # Atau port pilihan Anda
+      - "443:443"   # Untuk HTTPS
+```
+
+### 4️⃣ Deploy dengan Docker
+
+```bash
+# Build dan start containers
+sudo docker-compose up -d --build
+
+# Verify containers running
+sudo docker-compose ps
+
+# Check logs
+sudo docker-compose logs -f
+```
+
+### 5️⃣ Setup Auto-Restart (Optional tapi Recommended)
+
+Docker containers sudah dikonfigurasi dengan `restart: unless-stopped`, jadi akan otomatis restart saat:
+- Container crash
+- Server reboot
+- Error terjadi
+
+Untuk memastikan auto-start saat boot:
+
+```bash
+# Enable Docker service
+sudo systemctl enable docker
+
+# Docker containers akan auto-start karena restart policy
+```
+
+### 6️⃣ Firewall Configuration
+
+```bash
+# Allow aplikasi ports
+sudo ufw allow 3456/tcp  # Frontend
+sudo ufw allow 8765/tcp  # Backend API
+sudo ufw allow 443/tcp   # HTTPS (jika pakai SSL)
+
+# Enable firewall
+sudo ufw enable
+sudo ufw status
+```
+
+### 7️⃣ Maintenance Commands
+
+```bash
+# Update aplikasi (setelah git pull update)
+cd /opt/kasirKyuzu
+sudo git pull
+sudo docker-compose up -d --build
+
+# Backup database
+sudo cp backend/kasir.db backend/kasir.db.backup
+
+# View resource usage
+sudo docker stats
+
+# Clean up unused images
+sudo docker system prune -a
+```
+
+---
+
+## 🌐 Setup Domain & SSL (Optional)
+
+Untuk production dengan domain custom dan HTTPS:
+
+### Menggunakan Nginx Reverse Proxy + Certbot
+
+```bash
+# Install Nginx
+sudo apt install nginx -y
+
+# Install Certbot untuk SSL
+sudo apt install certbot python3-certbot-nginx -y
+
+# Create nginx config
+sudo nano /etc/nginx/sites-available/kasir
+```
+
+Paste konfigurasi berikut:
+
+```nginx
+server {
+    listen 80;
+    server_name yourdomain.com www.yourdomain.com;
+
+    # Frontend
+    location / {
+        proxy_pass http://localhost:3456;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    # Backend API
+    location /api {
+        proxy_pass http://localhost:8765;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
+```bash
+# Enable site
+sudo ln -s /etc/nginx/sites-available/kasir /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl restart nginx
+
+# Get SSL certificate
+sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
+
+# Auto-renewal test
+sudo certbot renew --dry-run
+```
+
+---
+
+## �🛠️ Development
 
 ### Reset Database
 
@@ -340,6 +559,11 @@ del backend\kasir.db
 
 # Linux/Mac
 rm backend/kasir.db
+
+# Docker
+sudo docker-compose down
+sudo rm backend/kasir.db
+sudo docker-compose up -d
 ```
 
 ### Build Production
@@ -363,6 +587,8 @@ npm run build
 | Database | SQLite |
 | Auth | JWT (python-jose), pbkdf2_sha256 |
 | Styling | Vanilla CSS (Glassmorphism) |
+| Deployment | Docker, Docker Compose, Nginx |
+
 
 ---
 
