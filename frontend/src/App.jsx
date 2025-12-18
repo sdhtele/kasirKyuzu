@@ -55,22 +55,27 @@ function AppContent() {
         })
     }
 
-    const updateQuantity = (productId, delta) => {
+    const updateQuantity = (productId, newQuantity) => {
         setCart(prevCart => {
-            return prevCart
-                .map(item => {
-                    if (item.id === productId) {
-                        const product = products.find(p => p.id === productId)
-                        const newQty = item.quantity + delta
-                        if (delta > 0 && product && newQty > product.stock) {
-                            alert(`Stok ${product.name} tidak cukup! Tersedia: ${product.stock}`)
-                            return item
-                        }
-                        return newQty > 0 ? { ...item, quantity: newQty } : null
+            // If quantity is 0 or less, remove item from cart
+            if (newQuantity <= 0) {
+                return prevCart.filter(item => item.id !== productId)
+            }
+
+            return prevCart.map(item => {
+                if (item.id === productId) {
+                    const product = products.find(p => p.id === productId)
+
+                    // Check if new quantity exceeds stock
+                    if (product && newQuantity > product.stock) {
+                        alert(`Stok ${product.name} tidak cukup! Maksimal: ${product.stock}`)
+                        return item // Keep current quantity
                     }
-                    return item
-                })
-                .filter(Boolean)
+
+                    return { ...item, quantity: newQuantity }
+                }
+                return item
+            })
         })
     }
 
