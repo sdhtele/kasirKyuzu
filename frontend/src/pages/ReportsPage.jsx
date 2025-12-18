@@ -146,6 +146,30 @@ function ReportsPage() {
                         </button>
                     </div>
                 </div>
+
+                {/* Professional Excel Reports */}
+                <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                        <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>📊 Laporan Excel Profesional</span>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>(dengan analitik & color coding)</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        <button
+                            onClick={() => exportCSV('/api/export/excel/transactions', `laporan_keuangan_${new Date().toISOString().split('T')[0]}.xlsx`)}
+                            className="btn btn-success btn-sm"
+                            style={{ background: 'linear-gradient(135deg, #00B050 0%, #70AD47 100%)', border: 'none' }}
+                        >
+                            💼 Laporan Keuangan Excel
+                        </button>
+                        <button
+                            onClick={() => exportCSV('/api/export/excel/products', `inventori_lengkap_${new Date().toISOString().split('T')[0]}.xlsx`)}
+                            className="btn btn-primary btn-sm"
+                            style={{ background: 'linear-gradient(135deg, #4472C4 0%, #5B9BD5 100%)', border: 'none' }}
+                        >
+                            📦 Inventori Lengkap Excel
+                        </button>
+                    </div>
+                </div>
             </div>
 
             {/* Tabs */}

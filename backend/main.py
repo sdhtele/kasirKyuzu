@@ -7,7 +7,7 @@ from pathlib import Path
 from database import engine, Base, SessionLocal
 from models import Product, User, Discount
 from auth import get_password_hash
-from routes import products, transactions, auth, discounts, reports, customers, export, users
+from routes import products, transactions, auth, discounts, reports, customers, export, users, excel_export
 
 # Create uploads directory
 UPLOAD_DIR = Path(__file__).parent / "uploads"
@@ -119,6 +119,7 @@ app.include_router(discounts.router)
 app.include_router(reports.router)
 app.include_router(customers.router)
 app.include_router(export.router)
+app.include_router(excel_export.router)
 app.include_router(users.router)
 
 # Mount static files for uploads
