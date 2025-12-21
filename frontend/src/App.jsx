@@ -18,6 +18,12 @@ function AppContent() {
     const [cart, setCart] = useState([])
     const [products, setProducts] = useState([])
 
+    // Sidebar collapsed state - synced with Header
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+        const saved = localStorage.getItem('sidebarCollapsed')
+        return saved === 'true'
+    })
+
     useEffect(() => {
         if (isAuthenticated) {
             fetchProducts()
@@ -138,10 +144,14 @@ function AppContent() {
                 currentPage={currentPage}
                 onPageChange={setCurrentPage}
                 cartCount={cartCount}
+                sidebarCollapsed={sidebarCollapsed}
+                onSidebarToggle={setSidebarCollapsed}
             />
-            <main className="main-content">
-                {renderPage()}
-            </main>
+            <div className={`app-content ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+                <main className="main-content">
+                    {renderPage()}
+                </main>
+            </div>
         </div>
     )
 }

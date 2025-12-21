@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { PageTitle } from '../components/PageTitle'
 
 function UsersPage() {
     const { authFetch, isAdmin } = useAuth()
@@ -135,33 +136,60 @@ function UsersPage() {
 
     return (
         <div className="page-container">
-            <div className="page-header">
-                <div>
-                    <h1>👤 Manajemen User</h1>
-                    <p className="text-muted">Kelola akun kasir dan admin</p>
-                </div>
-                <button className="btn btn-primary" onClick={() => setShowForm(true)}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+                <PageTitle
+                    title="Manajemen User"
+                    subtitle="Kelola akun kasir dan admin"
+                />
+                <button
+                    onClick={() => setShowForm(true)}
+                    style={{
+                        padding: '10px 20px',
+                        background: '#4f46e5',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '10px',
+                        fontSize: '15px',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        whiteSpace: 'nowrap',
+                        transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.target.style.background = '#4338ca'}
+                    onMouseLeave={(e) => e.target.style.background = '#4f46e5'}
+                >
                     ➕ Tambah User
                 </button>
             </div>
 
             {/* Stats */}
-            <div className="stats-grid" style={{ marginBottom: '1.5rem' }}>
-                <div className="stat-card">
-                    <div className="stat-value">{users.length}</div>
-                    <div className="stat-label">Total User</div>
+            <div className="grid grid-cols-4 mb-6">
+                <div className="card">
+                    <div style={{ fontSize: '32px', fontWeight: '700', color: '#4f46e5', marginBottom: '8px' }}>
+                        {users.length}
+                    </div>
+                    <div style={{ fontSize: '14px', color: '#6b7280' }}>Total User</div>
                 </div>
-                <div className="stat-card success">
-                    <div className="stat-value">{users.filter(u => u.is_active).length}</div>
-                    <div className="stat-label">User Aktif</div>
+                <div className="card">
+                    <div style={{ fontSize: '32px', fontWeight: '700', color: '#10b981', marginBottom: '8px' }}>
+                        {users.filter(u => u.is_active).length}
+                    </div>
+                    <div style={{ fontSize: '14px', color: '#6b7280' }}>User Aktif</div>
                 </div>
-                <div className="stat-card warning">
-                    <div className="stat-value">{users.filter(u => u.role === 'admin').length}</div>
-                    <div className="stat-label">Admin</div>
+                <div className="card">
+                    <div style={{ fontSize: '32px', fontWeight: '700', color: '#f59e0b', marginBottom: '8px' }}>
+                        {users.filter(u => u.role === 'admin').length}
+                    </div>
+                    <div style={{ fontSize: '14px', color: '#6b7280' }}>Admin</div>
                 </div>
-                <div className="stat-card primary">
-                    <div className="stat-value">{users.filter(u => u.role === 'kasir').length}</div>
-                    <div className="stat-label">Kasir</div>
+                <div className="card">
+                    <div style={{ fontSize: '32px', fontWeight: '700', color: '#3b82f6', marginBottom: '8px' }}>
+                        {users.filter(u => u.role === 'kasir').length}
+                    </div>
+                    <div style={{ fontSize: '14px', color: '#6b7280' }}>Kasir</div>
                 </div>
             </div>
 
@@ -200,25 +228,73 @@ function UsersPage() {
                                     </span>
                                 </td>
                                 <td>
-                                    <div className="action-buttons">
+                                    <div style={{ display: 'flex', gap: '8px' }}>
                                         <button
-                                            className="btn btn-ghost btn-sm"
                                             onClick={() => handleEdit(user)}
                                             title="Edit"
+                                            style={{
+                                                padding: '6px 12px',
+                                                background: '#f3f4f6',
+                                                color: '#374151',
+                                                border: '1px solid #e5e7eb',
+                                                borderRadius: '8px',
+                                                fontSize: '13px',
+                                                fontWeight: '500',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.target.style.background = '#e5e7eb'
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.target.style.background = '#f3f4f6'
+                                            }}
                                         >
-                                            ✏️
+                                            ✏️ Edit
                                         </button>
                                         <button
-                                            className="btn btn-warning btn-sm"
                                             onClick={() => setShowResetPassword(user)}
                                             title="Reset Password"
+                                            style={{
+                                                padding: '6px 12px',
+                                                background: '#fef3c7',
+                                                color: '#92400e',
+                                                border: '1px solid #fde68a',
+                                                borderRadius: '8px',
+                                                fontSize: '13px',
+                                                fontWeight: '500',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.target.style.background = '#fde68a'
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.target.style.background = '#fef3c7'
+                                            }}
                                         >
                                             🔑
                                         </button>
                                         <button
-                                            className={`btn btn-sm ${user.is_active ? 'btn-danger' : 'btn-success'}`}
                                             onClick={() => toggleUserStatus(user)}
                                             title={user.is_active ? 'Nonaktifkan' : 'Aktifkan'}
+                                            style={{
+                                                padding: '6px 12px',
+                                                background: user.is_active ? '#fee2e2' : '#d1fae5',
+                                                color: user.is_active ? '#991b1b' : '#065f46',
+                                                border: user.is_active ? '1px solid #fecaca' : '1px solid #a7f3d0',
+                                                borderRadius: '8px',
+                                                fontSize: '13px',
+                                                fontWeight: '500',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.target.style.background = user.is_active ? '#fecaca' : '#a7f3d0'
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.target.style.background = user.is_active ? '#fee2e2' : '#d1fae5'
+                                            }}
                                         >
                                             {user.is_active ? '🚫' : '✓'}
                                         </button>

@@ -231,3 +231,76 @@ def log_activity(
     )
     db.add(log)
     db.commit()
+
+
+# ============ PROFESSIONAL EXCEL EXPORT ============
+
+@router.get("/excel/transactions")
+def export_transactions_excel(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_admin)
+):
+    """Export professional transaction report to Excel with charts and formatting"""
+    from utils.excel_export import create_professional_transaction_report
+    
+    # Get recent transactions (last 30 days)
+    start_date = datetime.now() - timedelta(days=30)
+    transactions = db.query(Transaction).filter(
+        Transaction.created_at >= start_date
+    ).order_by(Transaction.created_at.desc()).all()
+    
+    # Calculate summary data
+    total_revenue = sum(t.total for t in transactions)
+    total_cost = sum(t.cost_total for t in transactions)
+    total_profit = total_revenue - total_cost
+    
+    summary_data = {
+        'total_revenue': total_revenue,
+        'total_transactions': len(transactions),
+        'avg_transaction': total_revenue / len(transactions) if transactions else 0,
+        'total_profit': total_profit,
+        'profit_margin': (total_profit / total_revenue * 100) if total_revenue > 0 else 0
+    }
+    
+    # Generate Excel
+    excel_data = create_professional_transaction_report(transactions, summary_data)
+    
+    return Response(
+        content=excel_data,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": f"attachment; filename=laporan_keuangan_{datetime.now().strftime('%Y%m%d')}.xlsx"
+        }
+    )
+
+
+@router.get("/excel/products")
+def export_products_excel(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_admin)
+):
+    """Export professional product/inventory report to Excel"""
+    from utils.excel_export import create_professional_product_report
+    
+    # Get all active products
+    products = db.query(Product).filter(Product.is_active == True).all()
+    
+    # Calculate summary
+    summary_data = {
+        'total_products': len(products),
+        'total_stock': sum(p.stock for p in products),
+        'low_stock_count': len([p for p in products if p.stock <= p.min_stock]),
+        'total_value': sum(p.stock * p.price for p in products)
+    }
+    
+    # Generate Excel
+    excel_data = create_professional_product_report(products, summary_data)
+    
+    return Response(
+        content=excel_data,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": f"attachment; filename=inventori_lengkap_{datetime.now().strftime('%Y%m%d')}.xlsx"
+        }
+    )
+

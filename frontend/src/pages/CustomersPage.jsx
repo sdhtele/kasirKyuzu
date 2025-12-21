@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { PageTitle } from '../components/PageTitle'
 
 function CustomersPage() {
     const { authFetch } = useAuth()
@@ -110,54 +111,80 @@ function CustomersPage() {
 
     return (
         <div className="page-container">
-            <div className="page-header">
-                <div>
-                    <h1>👥 Pelanggan</h1>
-                    <p className="text-muted">Kelola data pelanggan dan hutang</p>
-                </div>
-                <button className="btn btn-primary" onClick={() => setShowForm(true)}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+                <PageTitle
+                    title="Pelanggan"
+                    subtitle="Kelola data pelanggan dan hutang"
+                />
+                <button
+                    onClick={() => setShowForm(true)}
+                    style={{
+                        padding: '10px 20px',
+                        background: '#4f46e5',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '10px',
+                        fontSize: '15px',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        whiteSpace: 'nowrap',
+                        transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.target.style.background = '#4338ca'}
+                    onMouseLeave={(e) => e.target.style.background = '#4f46e5'}
+                >
                     ➕ Tambah Pelanggan
                 </button>
             </div>
 
             {/* Stats */}
-            <div className="stats-grid" style={{ marginBottom: '1.5rem' }}>
-                <div className="stat-card">
-                    <div className="stat-value">{customers.length}</div>
-                    <div className="stat-label">Total Pelanggan</div>
+            <div className="grid grid-cols-3 mb-6">
+                <div className="card">
+                    <div style={{ fontSize: '32px', fontWeight: '700', color: '#4f46e5', marginBottom: '8px' }}>
+                        {customers.length}
+                    </div>
+                    <div style={{ fontSize: '14px', color: '#6b7280' }}>Total Pelanggan</div>
                 </div>
-                <div className="stat-card warning">
-                    <div className="stat-value">Rp {totalDebt.toLocaleString()}</div>
-                    <div className="stat-label">Total Hutang</div>
+                <div className="card">
+                    <div style={{ fontSize: '32px', fontWeight: '700', color: '#ef4444', marginBottom: '8px' }}>
+                        Rp {totalDebt.toLocaleString()}
+                    </div>
+                    <div style={{ fontSize: '14px', color: '#6b7280' }}>Total Hutang</div>
                 </div>
-                <div className="stat-card">
-                    <div className="stat-value">{customers.filter(c => c.member_level === 'Gold').length}</div>
-                    <div className="stat-label">Member Gold</div>
+                <div className="card">
+                    <div style={{ fontSize: '32px', fontWeight: '700', color: '#f59e0b', marginBottom: '8px' }}>
+                        {customers.filter(c => c.member_level === 'Gold').length}
+                    </div>
+                    <div style={{ fontSize: '14px', color: '#6b7280' }}>Member Gold</div>
                 </div>
             </div>
 
             {/* Search & Filter */}
-            <div className="search-bar" style={{ marginBottom: '1rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                <div style={{ flex: 1, position: 'relative' }}>
-                    <input
-                        type="text"
-                        placeholder="🔍 Cari nama atau telepon..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="form-input"
-                        style={{ width: '100%', paddingLeft: '40px' }}
-                    />
-                    <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>🔍</span>
+            <div className="card mb-6" style={{ padding: '16px' }}>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <div style={{ flex: 1, minWidth: '250px' }}>
+                        <input
+                            type="text"
+                            placeholder="🔍 Cari nama atau telepon..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="form-input"
+                            style={{ width: '100%' }}
+                        />
+                    </div>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                        <input
+                            type="checkbox"
+                            checked={showDebtOnly}
+                            onChange={(e) => setShowDebtOnly(e.target.checked)}
+                            style={{ width: '18px', height: '18px' }}
+                        />
+                        <span style={{ fontSize: '14px', fontWeight: '500' }}>Hanya yang Punya Hutang</span>
+                    </label>
                 </div>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                    <input
-                        type="checkbox"
-                        checked={showDebtOnly}
-                        onChange={(e) => setShowDebtOnly(e.target.checked)}
-                        style={{ width: '16px', height: '16px' }}
-                    />
-                    Punya Hutang
-                </label>
             </div>
 
             {/* Customer Table (Desktop) */}

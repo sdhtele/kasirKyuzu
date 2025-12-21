@@ -217,40 +217,44 @@ function CashierPage({ products, cart, cartTotal, cartCount, addToCart, updateQu
             </div>
 
             {/* Scanner Modal */}
-            {isScanning && (
-                <div className="modal-overlay" onClick={() => setIsScanning(false)}>
-                    <div className="modal scanner-modal" onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h3>📷 Scan Barcode</h3>
-                            <button
-                                className="btn-close"
-                                onClick={() => setIsScanning(false)}
-                            >
-                                ✕
-                            </button>
-                        </div>
-                        <div className="modal-body">
-                            <BarcodeScanner
-                                onScan={handleScan}
-                                isScanning={isScanning}
-                                setIsScanning={setIsScanning}
-                            />
+            {
+                isScanning && (
+                    <div className="modal-overlay" onClick={() => setIsScanning(false)}>
+                        <div className="modal scanner-modal" onClick={(e) => e.stopPropagation()}>
+                            <div className="modal-header">
+                                <h3>📷 Scan Barcode</h3>
+                                <button
+                                    className="btn-close"
+                                    onClick={() => setIsScanning(false)}
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                            <div className="modal-body">
+                                <BarcodeScanner
+                                    onScan={handleScan}
+                                    isScanning={isScanning}
+                                    setIsScanning={setIsScanning}
+                                />
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Checkout Modal */}
-            {showCheckout && (
-                <CheckoutModal
-                    cart={cart}
-                    cartTotal={cartTotal}
-                    onClose={() => setShowCheckout(false)}
-                    onComplete={handleCheckoutComplete}
-                    authFetch={authFetch}
-                />
-            )}
-        </div>
+            {
+                showCheckout && (
+                    <CheckoutModal
+                        cart={cart}
+                        cartTotal={cartTotal}
+                        onClose={() => setShowCheckout(false)}
+                        onComplete={handleCheckoutComplete}
+                        authFetch={authFetch}
+                    />
+                )
+            }
+        </div >
     )
 }
 

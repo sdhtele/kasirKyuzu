@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { PageTitle } from '../components/PageTitle'
 
 function ReportsPage() {
     const { authFetch, isAdmin } = useAuth()
@@ -53,7 +54,7 @@ function ReportsPage() {
         fetchDailyReport(e.target.value)
     }
 
-    const exportCSV = async (endpoint, filename) => {
+    const exportExcel = async (endpoint, filename) => {
         try {
             const response = await authFetch(endpoint)
             if (response.ok) {
@@ -92,83 +93,101 @@ function ReportsPage() {
     }
 
     return (
-        <div className="reports-page">
-            <h2 className="page-title">📊 Laporan & Analitik</h2>
+        <div className="page-container">
+            <PageTitle
+                title="Laporan & Analitik"
+                subtitle="Dashboard laporan keuangan dan performa bisnis"
+            />
 
             {/* Summary Cards */}
             {summary && (
-                <div className="reports-summary">
-                    <div className="summary-card">
-                        <div className="summary-label">Hari Ini</div>
-                        <div className="summary-value success">{formatRupiah(summary.today.sales)}</div>
-                        <div className="summary-sub">{summary.today.transactions} transaksi</div>
+                <div className="grid grid-cols-4 mb-6">
+                    <div className="card">
+                        <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>Hari Ini</div>
+                        <div style={{ fontSize: '28px', fontWeight: '700', color: '#10b981', marginBottom: '4px' }}>
+                            {formatRupiah(summary.today.sales)}
+                        </div>
+                        <div style={{ fontSize: '13px', color: '#9ca3af' }}>{summary.today.transactions} transaksi</div>
                     </div>
-                    <div className="summary-card">
-                        <div className="summary-label">Bulan Ini</div>
-                        <div className="summary-value primary">{formatRupiah(summary.this_month.sales)}</div>
-                        <div className="summary-sub">{summary.this_month.transactions} transaksi</div>
+                    <div className="card">
+                        <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>Bulan Ini</div>
+                        <div style={{ fontSize: '28px', fontWeight: '700', color: '#4f46e5', marginBottom: '4px' }}>
+                            {formatRupiah(summary.this_month.sales)}
+                        </div>
+                        <div style={{ fontSize: '13px', color: '#9ca3af' }}>{summary.this_month.transactions} transaksi</div>
                     </div>
-                    <div className="summary-card">
-                        <div className="summary-label">Produk</div>
-                        <div className="summary-value">{summary.products.total}</div>
-                        <div className="summary-sub">{summary.products.low_stock} stok rendah</div>
+                    <div className="card">
+                        <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>Produk</div>
+                        <div style={{ fontSize: '32px', fontWeight: '700', color: '#3b82f6', marginBottom: '4px' }}>
+                            {summary.products.total}
+                        </div>
+                        <div style={{ fontSize: '13px', color: '#9ca3af' }}>{summary.products.low_stock} stok rendah</div>
                     </div>
-                    <div className="summary-card">
-                        <div className="summary-label">Diskon Aktif</div>
-                        <div className="summary-value warning">{summary.discounts.active}</div>
-                        <div className="summary-sub">promo</div>
+                    <div className="card">
+                        <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>Promo Aktif</div>
+                        <div style={{ fontSize: '32px', fontWeight: '700', color: '#f59e0b', marginBottom: '4px' }}>
+                            {summary.discounts.active}
+                        </div>
+                        <div style={{ fontSize: '13px', color: '#9ca3af' }}>diskon</div>
                     </div>
                 </div>
             )}
 
-            {/* Export Buttons */}
-            <div className="card" style={{ marginBottom: '1rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
-                    <h3 style={{ margin: 0 }}>📥 Export Data</h3>
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                        <button
-                            onClick={() => exportCSV('/api/export/products/csv', `produk_${new Date().toISOString().split('T')[0]}.csv`)}
-                            className="btn btn-success btn-sm"
-                        >
-                            📦 Produk CSV
-                        </button>
-                        <button
-                            onClick={() => exportCSV('/api/export/transactions/csv', `transaksi_${new Date().toISOString().split('T')[0]}.csv`)}
-                            className="btn btn-primary btn-sm"
-                        >
-                            💰 Transaksi CSV
-                        </button>
-                        <button
-                            onClick={() => exportCSV('/api/export/inventory/csv', `inventaris_${new Date().toISOString().split('T')[0]}.csv`)}
-                            className="btn btn-warning btn-sm"
-                        >
-                            📊 Inventaris CSV
-                        </button>
-                    </div>
+            {/* Excel Export Section */}
+            <div className="card mb-6" style={{ padding: '20px' }}>
+                <div style={{ marginBottom: '16px' }}>
+                    <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>
+                        📊 Export Laporan Excel
+                    </h3>
+                    <p style={{ fontSize: '14px', color: '#6b7280' }}>
+                        Laporan profesional dengan grafik, analitik, dan formatting otomatis
+                    </p>
                 </div>
-
-                {/* Professional Excel Reports */}
-                <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--border)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                        <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>📊 Laporan Excel Profesional</span>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>(dengan analitik & color coding)</span>
-                    </div>
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                        <button
-                            onClick={() => exportCSV('/api/export/excel/transactions', `laporan_keuangan_${new Date().toISOString().split('T')[0]}.xlsx`)}
-                            className="btn btn-success btn-sm"
-                            style={{ background: 'linear-gradient(135deg, #00B050 0%, #70AD47 100%)', border: 'none' }}
-                        >
-                            💼 Laporan Keuangan Excel
-                        </button>
-                        <button
-                            onClick={() => exportCSV('/api/export/excel/products', `inventori_lengkap_${new Date().toISOString().split('T')[0]}.xlsx`)}
-                            className="btn btn-primary btn-sm"
-                            style={{ background: 'linear-gradient(135deg, #4472C4 0%, #5B9BD5 100%)', border: 'none' }}
-                        >
-                            📦 Inventori Lengkap Excel
-                        </button>
-                    </div>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                    <button
+                        onClick={() => exportExcel('/api/export/excel/transactions', `laporan_keuangan_${new Date().toISOString().split('T')[0]}.xlsx`)}
+                        style={{
+                            padding: '12px 24px',
+                            background: 'linear-gradient(135deg, #10b981, #059669)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '10px',
+                            fontSize: '15px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+                            transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'}
+                        onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+                    >
+                        💼 Laporan Keuangan
+                    </button>
+                    <button
+                        onClick={() => exportExcel('/api/export/excel/products', `inventori_lengkap_${new Date().toISOString().split('T')[0]}.xlsx`)}
+                        style={{
+                            padding: '12px 24px',
+                            background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '10px',
+                            fontSize: '15px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+                            transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'}
+                        onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+                    >
+                        📦 Laporan Inventori
+                    </button>
                 </div>
             </div>
 

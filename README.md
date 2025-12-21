@@ -161,7 +161,7 @@ pip install -r requirements.txt
 python -m uvicorn main:app --reload --port 8000
 ```
 
-Backend akan berjalan di: **http://localhost:8765**
+Backend akan berjalan di: **http://localhost:8000**
 
 ### 3️⃣ Setup Frontend (React + Vite)
 

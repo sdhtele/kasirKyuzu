@@ -15,6 +15,8 @@ function AdminPage({ products, onProductsChange }) {
     const [productBarcodes, setProductBarcodes] = useState([])
     const [newBarcodeInput, setNewBarcodeInput] = useState('')
     const [newBarcodeDesc, setNewBarcodeDesc] = useState('')
+    const [pendingImageFile, setPendingImageFile] = useState(null) // for new product image upload
+    const [previewUrl, setPreviewUrl] = useState(null) // preview before save
     const fileInputRef = useRef(null)
     const videoRef = useRef(null)
     const readerRef = useRef(null)
@@ -88,6 +90,13 @@ function AdminPage({ products, onProductsChange }) {
             })
 
             if (response.ok) {
+                const result = await response.json()
+
+                // Auto-upload pending image for new products
+                if (!selectedProduct && pendingImageFile && result.id) {
+                    await handleImageUpload(result.id, pendingImageFile)
+                }
+
                 onProductsChange()
                 resetForm()
             } else {
@@ -439,15 +448,27 @@ function AdminPage({ products, onProductsChange }) {
     }
 
     return (
-        <div className="admin-layout">
-            {/* Product List */}
-            <div className="admin-section">
-                <div className="flex-between mb-md">
-                    <h3 className="section-title">📦 Daftar Produk ({products.length})</h3>
-                    <button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)}>
-                        + Tambah Produk
-                    </button>
+        <div className="page-container" style={{ maxWidth: '100%', padding: '24px' }}>
+            {/* Page Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{ width: '4px', height: '48px', background: 'linear-gradient(180deg, #4f46e5, #7c3aed)', borderRadius: '2px' }}></div>
+                    <div>
+                        <h1 style={{ fontSize: '28px', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>Daftar Produk</h1>
+                        <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Kelola {products.length} produk, gambar, dan barcode</p>
+                    </div>
                 </div>
+                <button
+                    className="btn btn-primary"
+                    onClick={() => setShowForm(true)}
+                    style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)', border: 'none', padding: '12px 24px', fontSize: '15px', fontWeight: '600', boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)' }}
+                >
+                    ➕ Tambah Produk
+                </button>
+            </div>
+
+            {/* Product List Section */}
+            <div style={{ background: 'var(--bg-white)', borderRadius: '16px', padding: '24px', boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border)' }}>
 
                 <input
                     type="text"
@@ -457,145 +478,120 @@ function AdminPage({ products, onProductsChange }) {
                     placeholder="🔍 Cari produk atau barcode..."
                 />
 
-                <div className="product-list">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {filteredProducts.map(product => (
-                        <div key={product.id} className="product-item">
-                            {/* Product Image or Emoji */}
-                            {product.image_url ? (
-                                <img
-                                    src={product.image_url}
-                                    alt={product.name}
-                                    style={{
-                                        width: '50px',
-                                        height: '50px',
-                                        objectFit: 'cover',
-                                        borderRadius: '8px'
-                                    }}
-                                />
-                            ) : (
-                                <span className="product-emoji">{product.emoji}</span>
-                            )}
-                            <div className="product-details">
-                                <div className="product-name">{product.name}</div>
-                                <div className="product-price">{formatRupiah(product.price)}</div>
-                                <div className="product-category">
-                                    {product.category} • Stok:
-                                    <span style={{
-                                        color: product.stock <= 5 ? 'var(--danger)' : 'var(--success)',
-                                        fontWeight: '600'
-                                    }}>
-                                        {product.stock}
-                                    </span>
-                                </div>
-                                {product.barcode && (
-                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                        📊 {product.barcode}
-                                    </div>
+                        <div
+                            key={product.id}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '16px',
+                                padding: '16px 20px',
+                                background: 'var(--bg-main)',
+                                borderRadius: '12px',
+                                border: '1px solid var(--border)',
+                                transition: 'all 0.15s ease'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-hover)'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'var(--bg-main)'}
+                        >
+                            {/* Product Image/Emoji */}
+                            <div style={{
+                                width: '56px',
+                                height: '56px',
+                                borderRadius: '10px',
+                                background: 'var(--bg-white)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0,
+                                border: '1px solid var(--border)'
+                            }}>
+                                {product.image_url ? (
+                                    <img src={product.image_url} alt={product.name} style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '6px' }} />
+                                ) : (
+                                    <span style={{ fontSize: '1.8rem' }}>{product.emoji}</span>
                                 )}
                             </div>
-                            <div className="product-actions">
-                                {/* Image Upload Button */}
-                                <label
-                                    className="btn btn-ghost btn-sm"
-                                    title="Upload Gambar"
-                                    style={{ cursor: 'pointer' }}
-                                >
-                                    📷
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        style={{ display: 'none' }}
-                                        onChange={(e) => handleImageUpload(product.id, e.target.files[0])}
-                                        disabled={uploading}
-                                    />
+
+                            {/* Product Info */}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontWeight: '600', fontSize: '15px', color: 'var(--text-primary)', marginBottom: '2px' }}>{product.name}</div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                                    <span style={{ fontWeight: '700', color: 'var(--primary)' }}>{formatRupiah(product.price)}</span>
+                                    <span style={{ background: 'var(--bg-hover)', padding: '2px 8px', borderRadius: '4px', color: 'var(--text-primary)' }}>{product.category}</span>
+                                    <span>Stok: <span style={{ fontWeight: '600', color: product.stock <= 5 ? 'var(--danger)' : 'var(--success)' }}>{product.stock}</span></span>
+                                    {product.barcode && <span style={{ fontFamily: 'monospace', fontSize: '11px' }}>📊 {product.barcode}</span>}
+                                </div>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 12px', background: 'var(--bg-white)', border: '1px solid var(--border)', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '500', color: 'var(--text-secondary)' }}>
+                                    📷 Gambar
+                                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => handleImageUpload(product.id, e.target.files[0])} disabled={uploading} />
                                 </label>
-                                <button className="btn btn-ghost btn-sm" onClick={() => showBarcode(product)} title="Lihat Barcode">
-                                    📊
-                                </button>
-                                <button className="btn btn-ghost btn-sm" onClick={() => openBarcodeModal(product)} title="Kelola Barcode">
-                                    🏷️
-                                </button>
-                                <button className="btn btn-ghost btn-sm" onClick={() => handleEdit(product)} title="Edit">
-                                    ✏️
-                                </button>
-                                <button className="btn btn-danger btn-sm" onClick={() => handleDelete(product.id)} title="Hapus">
-                                    🗑️
-                                </button>
+                                <button onClick={() => showBarcode(product)} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 12px', background: 'var(--bg-white)', border: '1px solid var(--border)', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '500', color: 'var(--text-secondary)' }}>📊 Barcode</button>
+                                <button onClick={() => openBarcodeModal(product)} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 12px', background: 'var(--bg-white)', border: '1px solid var(--border)', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '500', color: 'var(--text-secondary)' }}>🏷️ Kelola</button>
+                                <button onClick={() => handleEdit(product)} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 12px', background: '#4f46e5', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '500', color: 'white' }}>✏️ Edit</button>
+                                <button onClick={() => handleDelete(product.id)} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 12px', background: '#ef4444', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '500', color: 'white' }}>🗑️ Hapus</button>
                             </div>
                         </div>
                     ))}
                 </div>
             </div>
 
-            {/* Barcode Display / Image Preview */}
-            <div className="admin-section">
-                <h3 className="section-title">📊 Barcode & Gambar</h3>
+            {/* Barcode Preview Popup Modal */}
+            {barcodeImage && (
+                <div className="modal-overlay" onClick={() => setBarcodeImage(null)}>
+                    <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '450px' }}>
+                        <div className="modal-header">
+                            <h2>📊 Barcode & Gambar</h2>
+                            <button className="modal-close" onClick={() => setBarcodeImage(null)}>×</button>
+                        </div>
+                        <div className="modal-body" style={{ textAlign: 'center' }}>
+                            {/* Product Image */}
+                            {barcodeImage.product.image_url && (
+                                <div style={{ marginBottom: '1rem' }}>
+                                    <img
+                                        src={barcodeImage.product.image_url}
+                                        alt={barcodeImage.product.name}
+                                        style={{ maxWidth: '180px', maxHeight: '180px', objectFit: 'cover', borderRadius: '12px', border: '2px solid #e5e7eb' }}
+                                    />
+                                    <div style={{ marginTop: '8px' }}>
+                                        <button className="btn btn-danger btn-sm" onClick={() => handleDeleteImage(barcodeImage.product.id)}>
+                                            🗑️ Hapus Gambar
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
 
-                {barcodeImage ? (
-                    <div className="qr-display">
-                        {/* Product Image */}
-                        {barcodeImage.product.image_url && (
-                            <div style={{ marginBottom: '1rem' }}>
-                                <img
-                                    src={barcodeImage.product.image_url}
-                                    alt={barcodeImage.product.name}
-                                    style={{
-                                        maxWidth: '200px',
-                                        maxHeight: '200px',
-                                        objectFit: 'cover',
-                                        borderRadius: '12px',
-                                        border: '2px solid var(--border-glass)'
-                                    }}
-                                />
-                                <button
-                                    className="btn btn-danger btn-sm mt-sm"
-                                    onClick={() => handleDeleteImage(barcodeImage.product.id)}
-                                >
-                                    🗑️ Hapus Gambar
-                                </button>
+                            {/* Barcode Image */}
+                            <div style={{ background: 'white', padding: '1rem', borderRadius: '12px', marginBottom: '1rem' }}>
+                                <img src={barcodeImage.imageUrl} alt={`Barcode for ${barcodeImage.product.name}`} style={{ maxWidth: '100%', height: 'auto' }} />
                             </div>
-                        )}
 
-                        {/* Barcode Image */}
-                        <div className="qr-image" style={{ background: 'white', padding: '1rem' }}>
-                            <img
-                                src={barcodeImage.imageUrl}
-                                alt={`Barcode for ${barcodeImage.product.name}`}
-                                style={{ maxWidth: '100%', height: 'auto' }}
-                            />
-                        </div>
-                        <div className="qr-product-name mt-md">
-                            {barcodeImage.product.emoji} {barcodeImage.product.name}
-                        </div>
-                        <div className="qr-product-price">{formatRupiah(barcodeImage.product.price)}</div>
-                        {barcodeImage.product.barcode && (
-                            <div className="text-muted mt-sm">{barcodeImage.product.barcode}</div>
-                        )}
-                        <div className="flex gap-sm mt-md" style={{ justifyContent: 'center', flexWrap: 'wrap' }}>
-                            <label className="btn btn-primary" style={{ cursor: 'pointer' }}>
-                                📷 Upload Gambar
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    style={{ display: 'none' }}
-                                    onChange={(e) => {
-                                        handleImageUpload(barcodeImage.product.id, e.target.files[0])
-                                    }}
-                                    disabled={uploading}
-                                />
-                            </label>
-                            <button className="btn btn-success" onClick={printBarcode}>🖨️ Print</button>
-                            <button className="btn btn-ghost" onClick={() => setBarcodeImage(null)}>✕ Tutup</button>
+                            {/* Product Info */}
+                            <div style={{ marginBottom: '1rem' }}>
+                                <div style={{ fontSize: '1.25rem', fontWeight: '600' }}>{barcodeImage.product.emoji} {barcodeImage.product.name}</div>
+                                <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#4f46e5' }}>{formatRupiah(barcodeImage.product.price)}</div>
+                                {barcodeImage.product.barcode && (
+                                    <div style={{ fontSize: '0.9rem', color: '#6b7280', marginTop: '4px' }}>{barcodeImage.product.barcode}</div>
+                                )}
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                                <label className="btn btn-primary" style={{ cursor: 'pointer' }}>
+                                    📷 Upload Gambar
+                                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => handleImageUpload(barcodeImage.product.id, e.target.files[0])} disabled={uploading} />
+                                </label>
+                                <button className="btn btn-success" onClick={printBarcode}>🖨️ Print</button>
+                            </div>
                         </div>
                     </div>
-                ) : (
-                    <div className="qr-display" style={{ color: 'var(--text-muted)' }}>
-                        <span style={{ fontSize: '4rem', opacity: 0.5 }}>📊</span>
-                        <p className="mt-md">Pilih produk untuk melihat barcode</p>
-                        <p style={{ fontSize: '0.85rem' }}>Klik 📊 pada produk di sebelah kiri</p>
-                    </div>
-                )}
-            </div>
+                </div>
+            )}
 
             {/* Add/Edit Modal */}
             {showForm && (
@@ -725,8 +721,101 @@ function AdminPage({ products, onProductsChange }) {
                                     )}
                                 </div>
 
+                                {/* Image Upload Section */}
                                 <div className="form-group">
-                                    <label className="form-label">Emoji</label>
+                                    <label className="form-label">Foto Produk</label>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                        {/* Preview */}
+                                        <div style={{
+                                            width: '80px',
+                                            height: '80px',
+                                            borderRadius: '12px',
+                                            background: '#f3f4f6',
+                                            border: '2px dashed #d1d5db',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            overflow: 'hidden',
+                                            flexShrink: 0
+                                        }}>
+                                            {previewUrl ? (
+                                                <img src={previewUrl} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            ) : selectedProduct?.image_url ? (
+                                                <img src={selectedProduct.image_url} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            ) : (
+                                                <span style={{ fontSize: '2rem', opacity: 0.4 }}>📷</span>
+                                            )}
+                                        </div>
+                                        {/* Upload Info */}
+                                        <div style={{ flex: 1 }}>
+                                            <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '8px' }}>
+                                                {previewUrl ? '✅ Foto siap diupload' : selectedProduct?.image_url ? 'Foto sudah diupload' : 'Pilih foto untuk produk'}
+                                            </p>
+                                            <label style={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '6px',
+                                                padding: '8px 16px',
+                                                background: '#4f46e5',
+                                                color: 'white',
+                                                borderRadius: '8px',
+                                                cursor: 'pointer',
+                                                fontSize: '13px',
+                                                fontWeight: '500'
+                                            }}>
+                                                📷 {previewUrl || selectedProduct?.image_url ? 'Ganti Foto' : 'Pilih Foto'}
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    style={{ display: 'none' }}
+                                                    onChange={(e) => {
+                                                        if (e.target.files[0]) {
+                                                            const file = e.target.files[0]
+                                                            if (selectedProduct) {
+                                                                // Existing product - upload immediately
+                                                                handleImageUpload(selectedProduct.id, file)
+                                                            } else {
+                                                                // New product - store for later
+                                                                setPendingImageFile(file)
+                                                                setPreviewUrl(URL.createObjectURL(file))
+                                                            }
+                                                        }
+                                                    }}
+                                                    disabled={uploading}
+                                                />
+                                            </label>
+                                            {(previewUrl || selectedProduct?.image_url) && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        if (previewUrl) {
+                                                            setPendingImageFile(null)
+                                                            setPreviewUrl(null)
+                                                        } else if (selectedProduct) {
+                                                            handleDeleteImage(selectedProduct.id)
+                                                        }
+                                                    }}
+                                                    style={{
+                                                        marginLeft: '8px',
+                                                        padding: '8px 16px',
+                                                        background: '#fee2e2',
+                                                        color: '#ef4444',
+                                                        border: 'none',
+                                                        borderRadius: '8px',
+                                                        cursor: 'pointer',
+                                                        fontSize: '13px',
+                                                        fontWeight: '500'
+                                                    }}
+                                                >
+                                                    🗑️ Hapus
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Emoji (Fallback jika tidak ada foto)</label>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                                         {emojiOptions.map(emoji => (
                                             <button

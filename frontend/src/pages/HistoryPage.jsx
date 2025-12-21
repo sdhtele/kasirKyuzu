@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { PageTitle } from '../components/PageTitle'
 
 function HistoryPage() {
     const { authFetch } = useAuth()
@@ -59,41 +60,59 @@ function HistoryPage() {
 
     const totalRevenue = transactions.reduce((sum, t) => sum + t.total, 0)
     const totalTransactions = transactions.length
+    const avgTransaction = totalTransactions > 0 ? totalRevenue / totalTransactions : 0
 
     if (loading) {
         return <div className="flex-center" style={{ height: '50vh' }}><div className="spinner"></div></div>
     }
 
     return (
-        <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-            <h2 style={{ marginBottom: '1.5rem' }}>📋 Riwayat Transaksi</h2>
+        <div className="page-container">
+            <PageTitle
+                title="Riwayat Transaksi"
+                subtitle="Lihat dan cari riwayat transaksi penjualan"
+            />
 
-            {/* Summary */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
-                <div className="glass-card" style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--primary)' }}>
+            {/* Summary Stats */}
+            <div className="grid grid-cols-3 mb-6">
+                <div className="card">
+                    <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>Total Transaksi</div>
+                    <div style={{ fontSize: '32px', fontWeight: '700', color: '#4f46e5', marginBottom: '4px' }}>
                         {totalTransactions}
                     </div>
-                    <div className="text-muted">Total Transaksi</div>
+                    <div style={{ fontSize: '13px', color: '#9ca3af' }}>transaksi tercatat</div>
                 </div>
-                <div className="glass-card" style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--success)' }}>
+                <div className="card">
+                    <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>Total Pendapatan</div>
+                    <div style={{ fontSize: '28px', fontWeight: '700', color: '#10b981', marginBottom: '4px' }}>
                         {formatRupiah(totalRevenue)}
                     </div>
-                    <div className="text-muted">Total Pendapatan</div>
+                    <div style={{ fontSize: '13px', color: '#9ca3af' }}>akumulasi penjualan</div>
+                </div>
+                <div className="card">
+                    <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>Rata-rata</div>
+                    <div style={{ fontSize: '28px', fontWeight: '700', color: '#f59e0b', marginBottom: '4px' }}>
+                        {formatRupiah(avgTransaction)}
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#9ca3af' }}>per transaksi</div>
                 </div>
             </div>
 
             {/* Filters */}
-            <div className="glass-card mb-lg">
-                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                        <label className="form-label">Metode Pembayaran</label>
+            <div className="card mb-6" style={{ padding: '20px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '16px', color: '#111827' }}>
+                    🔍 Filter & Pencarian
+                </h3>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                    <div style={{ flex: '1 1 150px', minWidth: '150px' }}>
+                        <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '6px', color: '#374151' }}>
+                            Metode Pembayaran
+                        </label>
                         <select
                             className="form-input"
                             value={filter.payment_method}
                             onChange={(e) => setFilter({ ...filter, payment_method: e.target.value })}
-                            style={{ minWidth: '150px' }}
+                            style={{ width: '100%' }}
                         >
                             <option value="">Semua</option>
                             <option value="cash">Cash</option>
@@ -102,33 +121,66 @@ function HistoryPage() {
                             <option value="credit">Credit</option>
                         </select>
                     </div>
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                        <label className="form-label">Dari Tanggal</label>
+                    <div style={{ flex: '1 1 150px', minWidth: '150px' }}>
+                        <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '6px', color: '#374151' }}>
+                            Dari Tanggal
+                        </label>
                         <input
                             type="date"
                             className="form-input"
                             value={filter.date_from}
                             onChange={(e) => setFilter({ ...filter, date_from: e.target.value })}
+                            style={{ width: '100%' }}
                         />
                     </div>
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                        <label className="form-label">Sampai Tanggal</label>
+                    <div style={{ flex: '1 1 150px', minWidth: '150px' }}>
+                        <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '6px', color: '#374151' }}>
+                            Sampai Tanggal
+                        </label>
                         <input
                             type="date"
                             className="form-input"
                             value={filter.date_to}
                             onChange={(e) => setFilter({ ...filter, date_to: e.target.value })}
+                            style={{ width: '100%' }}
                         />
                     </div>
-                    <button className="btn btn-primary" onClick={fetchTransactions}>
+                    <button
+                        onClick={fetchTransactions}
+                        style={{
+                            padding: '10px 20px',
+                            background: '#4f46e5',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.target.style.background = '#4338ca'}
+                        onMouseLeave={(e) => e.target.style.background = '#4f46e5'}
+                    >
                         🔍 Filter
                     </button>
                     <button
-                        className="btn btn-ghost"
                         onClick={() => {
                             setFilter({ payment_method: '', date_from: '', date_to: '' })
                             setTimeout(fetchTransactions, 100)
                         }}
+                        style={{
+                            padding: '10px 20px',
+                            background: '#f3f4f6',
+                            color: '#374151',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '8px',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.target.style.background = '#e5e7eb'}
+                        onMouseLeave={(e) => e.target.style.background = '#f3f4f6'}
                     >
                         ✕ Reset
                     </button>
